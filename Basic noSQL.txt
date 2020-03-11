@@ -1,0 +1,37 @@
+#######
+-- Installation MongoDB
+#######
+
+## make sure there is \data\db directory (with reading and writing permissions) in the root directory
+
+## check the current version
+  mongo --version
+
+#######
+-- Starting MongoDB
+#######
+
+## -- To start MongoDB from terminal
+  mongod  ## let it run, and then in separate terminal
+
+  mongo   ## in separate terminal in pararel to the previous command
+
+
+#######
+-- First steps
+#######
+
+## shows current database
+  db
+
+## -- shows available databases - only non-empty ones!
+  show dbs
+
+## create a new database if non-existing
+  use myNewDB
+
+## -- activate a database if existing already
+  use <database>
+
+## -- add an entry to the active database, so that it will be listed among the available databases
+  db.myCollection.save({name:"John"})
