@@ -1,6 +1,44 @@
 #######
+-- MongoDB terminology
+#######
+
+    SQL                 |   MongoDB
+------------------------|------------------
+    database            |   database
+    table / relation    |   collection
+    schema              |   (n/a)
+    row                 |   document (or BSON document)
+    column              |   field
+    index               |   index
+    primiary key        |   primary key
+------------------------|------------------
+    SELECT              |   $project
+    WHERE               |   $match
+    HAVING              |   $match
+    GROUP BY            |   $group
+    ORDER BY            |   $sort
+    LIMIT               |   $limit
+    SUM()               |   $sum
+    COUNT()             |   $sortByCount (or $sum) 
+    join                |   $lookup
+    
+{_id:1, age:25}     <-- ducument
+
+{
+_id:1               <-- primary key, mandatory
+name: "Sue"         <-- field: value
+}
+
+
+
+
+#######
 -- Installation MongoDB
 #######
+
+sudo service mongod start
+sudo service mongod stop
+sudo service mongod restart
 
 ## make sure there is \data\db directory (with reading and writing permissions) in the root directory
 
@@ -21,17 +59,144 @@
 -- First steps
 #######
 
-## shows current database
-  db
-
 ## -- shows available databases - only non-empty ones!
-  show dbs
-
-## create a new database if non-existing
-  use myNewDB
+    show dbs
 
 ## -- activate a database if existing already
-  use <database>
+    use <database>
 
-## -- add an entry to the active database, so that it will be listed among the available databases
-  db.myCollection.save({name:"John"})
+## -- create a new database if non-existing
+    use myNewDB
+
+## shows current database
+    db
+
+## -- Show Collections (tables) in the current database
+    show collections
+
+## -- Create new collection
+    db.createCollection(<name>, <options>)
+    db.createCollection( "mycol", { capped:true, autoIndexId:true, size:
+   6142800, max:10000 } )
+
+
+#######
+-- MongoDB commands
+#######
+
+#######
+-- Creating new entry to the datebase, save() method
+#######
+
+## -- add an entry to the active database, so that it will be listed among the available 
+databases
+    db.<collection>.save({name:"value"}) ## -- db at the begining means the current (active) database
+
+    db.user.save({ _id:1, first_name:"John", surname:"Smith" })
+    db.users.save({_id:10, fname:"", surname:"", age:, email:"", carReg:"" })
+
+
+#######
+-- Adding an entry to the datebase, insert() method
+#######
+
+## -- inserts a document into a collection 
+    db.mydoc.insert( {_id:1, name:"John"} ) ## -- (if _id exists, does nothing)
+
+## -- adding multiple documents (note square brackets)
+    db.mydoc.insert( [{_id:5, name: "Sean"}, {_id:6, name: "Luke"}] )
+
+
+#######
+-- Overwriting existing entry in the datebase, save() method, using _id
+#######
+
+## -- update (overwrite) existing document (existing "_id" value)
+    db.mydoc.save( {_id:1, name: "John"} )  ## -- overwrites existing record with specified _id value
+
+
+
+#######
+-- Update existing entry in the datebase, update() method; the method can be applied to a certain documents only as specified in find() parameters (unlike save() method)
+#######
+
+## -- modify existing document in a collection
+    update(<query>, <update>, <options>) ## -- genreal format    
+    
+    db.mydoc.update( {$or: [{name:"Tom"}, {name:"Mary"}]}, {address:"Galway"} ) ## -- updates the FIRST documents that matache the query, by adding address (if did not exist)
+
+    db.mydoc.update( {$or: [{name:"Tom"}, {name:"Mary"}]}, {$set: {address:"Galway"}}, {multi:true} ) ## -- updates all documents that matache the query, by modifieng ($set) or adding address
+
+## -- complex example
+    db.mydoc.update( {experience: {$gt:20}}, {$set: {title:"Manager"}}, {multi:true, upsert:true} ) ## -- $upsert means that if no ducument exists to matach the query, a new one will be created
+
+
+#######
+-- deleting existing entry in the datebase
+#######
+
+## --  deleteOne() method - deletes first document that matches query
+    db.mydoc.deleteOne( {age: {$lt:40}} )
+
+## --  deleteMany() method - deletes all documents that matches query
+    db.mydoc.deleteMany( {age: {$lt:40}} )
+
+## -- remove an entry
+    db,mydoc.remove({age:22})
+
+## -- remove all documents
+    db.mydoc.remove({})
+
+
+#######
+-- Query the datebase, find() method
+#######
+
+## -- find()
+    db.<collection>.find(<conditions>) ## -- returns documents in the current database (db at the begining is not a name, but reference to the current database) that fulfill the specified conditions
+
+    db.<collection>.find() ## -- returns all documents in the collection
+
+## -- find().pretty() - returns document in more human frendly format
+    db.User.find().pretty()
+
+## - find(<condition>)
+    db.User.find( {age:22} ) ## -- finds only documents where afe is 22
+
+## -- $and
+    ## -- $and looks for queries in form of an array (square brackets)
+    db.User.find( {age:22, _id:1} ) ## -- both condition must be satisfied (AND)
+    db.User.find( {$and: [{age:22, _id:1}]} ) ## -- both condition must be satisfied (AND)
+
+## -- $or
+    db.User.find( {$or: [{age:22, _id:1}]} ) ## -- either condition is satisfied (OR)
+
+## -- $in
+    db.User.find( {age: {$in [22, 30]}} ) ## -- the specified values array (not range!) (IN)
+
+## -- $exists
+    db.User.find( {email: {$exists:true}} ) ## -- returns only documents that have a email attribute
+
+## -- $inc - increases field value by specified amount, by default only one document
+    db.people.update({Age: {$exist:true}, {$inc:{Age:1}, {multi:true} } })
+alternatively
+    db.people.updateMany({Age: {$exist:true}, {$inc:{Age:1} } })
+
+
+## -- complex queries esamples 
+    db.User.find( {$and: [{email: {$exists:true}}, {age: {$gt: 20}}]} ) ## -- returns only documents that have a email attribute AND age is greater ($gt) than 20
+
+## -- find first document that matches the query findOne()
+    db.User.findOne( {email: {$exists: true}} )
+
+#######
+-- Query the datebase, sort() method
+#######
+
+    1 ## -- ascending order
+    -1 ## -- descending order
+
+db.User.find( {email: {$exists: true} ).sort( {surname:1, age:-1} ) ## -- sorts all documents that have a email attribute alphabetically by surneme and, within surname, from oldest to youngest
+
+
+
