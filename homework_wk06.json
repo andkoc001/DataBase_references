@@ -1,0 +1,208 @@
+#######
+-- MongoDB homework 1 (23/03/2020)
+#######
+
+## -- To start MongoDB from terminal
+    mongod  ## let it run, and then in separate terminal
+    mongo   ## in separate terminal in pararel to the previous command
+
+## -- checking exising databases
+    show dbs
+
+############### Answers
+
+##### -- 1. Create a mongodb database called usersdb.
+## ans ##
+    use usersdb
+
+
+##### -- 2. Create a collection called users which has documents with the following attributes:
+## ans ##
+    db.createCollection( "users" )
+
+
+    db.users.save({_id:100, fname:"John", surname:"Smith", age:33, email:"jsmith@gmail.com", carReg:"131-G-101" })
+
+    db.users.insert([{_id:100, fname:"John", surname:"Smith", age:33, email:"jsmith@gmail.com", carReg:"131-G-101" }, { "_id" : 101, "fname" : "Sean", "surname" : "Murphy", "age" : 21, "email" : "seanmurphy@yahoo.com", "carReg" : "04-WH-235" }, { "_id" : 102, "fname" : "Aine", "surname" : "Browne", "age" : 23, "email" : "abrowne@gmail.com" }, { "_id" : 103, "fname" : "Alan", "surname" : "Murphy", "age" : 24, "email" : "murphya@hotmail.com", "carReg" : "07-RN-9988" }, { "_id" : 104, "fname" : "Sarah", "surname" : "Doyle", "age" : 23, "email" : "sarah@gmail.com", "carReg" : "142-G-2343" }, { "_id" : 105, "fname" : "Bill", "surname" : "Mulligan", "age" : 19, "email" : "billy123@gmail.com" }, { "_id" : 106, "fname" : "Shane", "surname" : "Kelly", "age" : 24, "email" : "sk998@yahoo.com" }, { "_id" : 107, "fname" : "Will", "surname" : "Doyle", "age" : 19, "email" : "doyler123@gmail.com", "carReg" : "10-G-2535" }])
+
+
+##### -- 3. Give the command to find all documents in the users collection.
+## ans ##
+    db.users.find()
+
+    db.users.find().pretty()
+
+
+##### -- 4. Give the command to find all documents in the users collection where the age is 19.
+## ans ##
+    db.users.find({age:19})
+
+##### -- 5. Give the command to find all documents in the users collection where the age is greater than 19.
+## ans ##
+    db.users.find({age: {$gt:19}})
+
+##### -- 6. Give the command to find all documents in the users collection where the age is greater than 19 and the user has a car.
+## ans ##
+    db.users.find( {$and: [{age: {$gt:19}}, {carReg: {$exists:true}}] } ) 
+alternatively
+    db.users.find( {age:{$gt:19}, carReg:{$exists:{carReg:true}}} )
+
+
+##### -- 7. Give the command to find all documents in the users collection where _id is greater than 104 and age is greater than 20.
+## ans ##
+    db.users.find( {$and: [ {_id: {$gt:104}} , {age: {$gt:20}} ] } )
+
+
+##### -- 8. Give the command to find the first document in the users collection where the user has a car.
+## ans ##
+    db.users.findOne( {carReg: {$exists:true}} )
+
+
+##### -- 9. User 106 - Shane has bought a car with reg 12-G-1234. The following command was run to update the user’s document:
+    db.users.save({_id:106, carReg:"12-G-1234"})
+What does the document look like now and why?
+## ans ##
+    save() method overwrite the existing document, with ommited fields being erased
+
+
+##### -- 10. User 102 - Aine has bought a car with reg 10-G-9876. The following command was run to update the user’s document:
+    db.users.update({_id:102}, {carReg:"10-G-9876"})
+What does the document look like now and why?
+## ans ##
+    ????? it seems to do precisely the same thing as save() method above; update() method can be applied to a certain documents only as specified in find() parameters
+
+
+##### -- 11, User 105 – Bill’s document is as follows:
+    { "_id" : 105, "fname" : "Bill", "surname" : "Mulligan", "age" : 19, "email" : "billy123@gmail.com" }
+Bill has bought a car with reg 161-MO-4. Give the command so that Bill’s document now looks as follows:
+    { "_id" : 105, "fname" : "Bill", "surname" : "Mulligan", "age" : 19, "email" : "billy123@gmail.com", "carReg" : "161-MO-4" }
+## ans ##
+    db.users.update( {_id:105}, {$set: {carReg:"161-MO-4"}} )
+
+
+##### -- 12, User 106’s document now looks as follows: { "_id" : 106, "carReg" : "12-G-1234" }
+Give the command to add the original fields:
+_id fname    surname     Age     email
+106 Shane    Kelly       24      sk998@yahoo.com
+back to the document in a single command so that the document now looks as follows:
+_id fname    surname     Age     email              carReg
+106 Shane    Kelly       24      sk998@yahoo.com    12-G-1234
+## ans ##
+    db.users.update( {_id:106}, {$set: {fname:"Shane", surname:"Kelly", age:24, email: "sk998@yahoo.com"}} )
+
+
+##### -- 13. Give the mongodb command to add 1 to each user’s age.
+## -- Syntax: db.collection.update(query, update, options) - query {} means all documents
+## ans ##
+    db.users.update( {}, {$inc:{age:1}}, {multi:true} )
+alternatively
+    db.users.updateMany( {}, {$inc:{age:-1}} )
+
+
+##### -- 14, Add a new attribute sex, to each document as follows:
+_id Sex
+100 M
+101 M
+103 M
+104 F
+105 M
+106 M
+107 M
+## ans ##
+    db.users.update({_id:100}, {$set:{Sex:"M"}})
+    db.users.update({_id:101}, {$set:{Sex:"M"}})
+    db.users.update({_id:103}, {$set:{Sex:"M"}})
+    db.users.update({_id:104}, {$set:{Sex:"F"}})
+    db.users.update({_id:105}, {$set:{Sex:"M"}})
+    db.users.update({_id:106}, {$set:{Sex:"M"}})
+    db.users.update({_id:107}, {$set:{Sex:"M"}})
+alternatively
+    db.users.updateMany({_id:{$in:[101,102,103, 105,106,107]}}, {$set:{Sex:"M"}})
+    db.users.update({Sex:{$ne:"M"}}, {$set:{Sex:"F"}})
+alternatively
+    db.users.update({_id:104}, {$set:{Sex:"F"}})
+    db.users.update({Sex:{$ne:"F"}}, {$set:{Sex:"M"}})
+
+
+##### -- 15. Add a new attribute title with the value Mr., to each document where the sex is M, and the age is greater than 20:
+## ans ##
+    db.users.updateMany( {$and: [{Sex:"M"}, {age:{$gt:20}}]} , {$set:{title:"Mr"}} )
+
+
+##### -- 16. Users 101 – Sean, 103 – Alan and 107 – Will have sold their cars, update the collection to remove the carReg attribute from these documents.
+## -- $unset - deletes a particular field
+## ans ##
+    db.users.updateMany({_id:{$in:[101, 103, 107]}}, {$unset:{carReg:""}})
+alternatively
+    db.users.update({$or:[{_id:101},{_id:103},{_id:107}]}, {$unset:{carReg:""}}, {multi:true})
+
+
+##### -- 17. Give the mongodb command to list/show only the fname, surname, age and sex attributes of documents where the _id is between 101 and 107 inclusive.
+## ans ##
+    db.users.find({$and:[{_id:{$gte:101}}, {_id:{$lte:107}}]}, {fname:1, surname:true, age:true, Sex:1, _id:0})
+
+
+##### -- 18. Give the mongodb command to renme the fname attribute to Name.
+## ans ##
+    db.users.updateMany({}, {$rename:{fname:"Name"}})
+
+
+-------------
+Inny zestaw ćwiczeń - z filmu demo 
+-------------
+##### -- 1. Creata a MongoDB database calledDB
+## ans ##
+    use peopleDB
+
+
+##### -- 2. Add the following data to a collection called people in the peopleDB databas (not shown here, but see the answer just below)
+## ans ##
+     db.people.save({_id:"G103", Name:"John", Age:23, Sex:"Male", isStudent:"Student" })
+     db.people.save({_id:"D303", Name: "Molly", Age: 24})
+     db.people.save({_id:"M234", Name: "Ray", Sex: "Male", isStudent: true})
+     db.people.save({_id:"M223", Name: "Tom", Age: 24, Sex: "Male", isStudent: false})
+     db.people.save({_id:"W989", Name: "Mary", Age: 25, Sex: "Female"})
+
+
+##### -- 3. Show all documents in the people collection
+## ans ##
+    db.people.find()
+
+
+##### -- 4. Show all males in the people collection
+## ans ##
+    db.people.find({Sex:"Male"})
+
+
+##### -- 5. Show all males who have an age attributr
+## ans ##
+    db.people.find({Sex:"Male", Age:{$exists:true}})
+alternatively:
+    db.people.find({$and: [{Sex:"Male"},{Age: {$exists:true} }] })
+
+
+##### -- Show all males (1) students (2) and all females (3)
+## ans ##
+    db.people.find({$or: {Sex:"Female"}, {$and:{Sex:"Male", {isStudent:true}} })
+
+
+##### -- Add a new document to the people collection: _id:"O477", Name:"Billy", age:29, email:"Billy477@gmail.com"
+## ans ##
+    db.people.insert({_id:"J477", Name:"Billy", age:29, email:"Billy477@gmail.com"})
+alternatively:    
+    db.people.insert({_id:"J477", Name:"Billy", age:29, email:"Billy477@gmail.com"})
+
+
+##### -- Add the following attribute to the document just updated: twitter: @billy477
+## ans ##
+    db.people.update({_id:J477}, {$set: {twitter:"@billy477"} })
+
+
+##### -- Increase peoples age (where appropriate) by 1 ($inc operator)
+## ans ##
+    db.people.update({Age: {$exists:true}, {$inc:{Age:1}, {multi:true} } })
+alternatively
+    db.people.updateMany({Age: {$exists:true}, {$inc:{Age:1} } })
+
+
+
