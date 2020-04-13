@@ -1,23 +1,22 @@
 # Applied Databases, GMIT 2020
-# Demo exercise from week 09 lecture
+# Demo exercise 1 from week 09 lecture
 # Author: Andrzej Kocielski
 # ------------------------------
 
 
 # -----
 '''
-Demo exercise
+Demo exercise 1
 
 Import school.sql
 
 Write a Python program that takes a number in from the console representing experience
 and returns all details of all teachers whose experience is less than that number.
 
-Write a Python program that asks to entrer details of a new subject and adds it to
-the database.
 '''
 
-# import external pieces of code from school.py file
+# import external pieces of code from school.py file, being a child to this one
+# school.py connects to SQL database and handles a query using functions get_experience()
 import school
 
 
@@ -51,6 +50,11 @@ def main():
         # if invalid input (e.g. a letter) received
         except Exception as e:
             print("Invalid number, try again...")
+
+    # test if I can change the query value, once the DB has been connected -> no, skipped
+    # call the function get_experience() with hardwired parameter value
+    # this would not make an effect - skipped - see the function definition
+    school.get_experience(44)
 
 
 # set a starting point for the program
