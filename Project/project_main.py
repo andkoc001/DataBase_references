@@ -14,6 +14,10 @@
 import world
 
 
+# import pymysql library (a Python MySQL client) for the typical errors that may occur in pymysql library
+import pymysql
+
+
 # -------------
 # Main function
 # -------------
@@ -26,6 +30,7 @@ def main():
 
     print("\n\n>>> Applied Databases Project by Andrzej Kocielski, 2020 <<<")
 
+    # Main menu screen
     display_menu()
 
     while True:  # this is a 'forever' loop, unless interupted (break)
@@ -36,22 +41,38 @@ def main():
         if (choice == "1"):
             get_people()
             display_menu()
+
+        elif (choice == "b"):
+            get_people_b()
+            display_menu()
+
         elif (choice == "2"):
             get_countries_by_ind_year()
             display_menu()
+
         elif (choice == "3"):
-            get_year()  # for testing only
+            add_new_person()
             display_menu()
+
         elif (choice == "4"):
+            view_countries_by_name()
             display_menu()
+
         elif (choice == "5"):
+            view_countries_by_population()
             display_menu()
+
         elif (choice == "6"):
+            #
             display_menu()
+
         elif (choice == "7"):
+            #
             display_menu()
+
         elif (choice == "x"):  # Exit condition
             break
+
         else:
             display_menu()
 
@@ -70,21 +91,69 @@ def get_people():
         # exeption handling
         try:
 
-            # call funtion view_people() from world.py; assign the results to 'rows'
-            rows = world.view_people()
+            #chunk_size = int(2)
 
-            # print(teachers) # prints all the records that satisfy the query
-            # for nice looking formating, records in a sequence one by one
             print("\nID", "\t|", "Name\t", "\t|", "Age")
             print("-"*32)
-            for row in rows:
-                print(row["personID"], "\t|",
-                      row["personname"], "   \t|", row["age"])
+
+            # call function view_people() from world.py; result is printed within the function
+            world.view_people()
+            break
+
+        # if invalid input (e.g. a letter) received
+        except Exception as e:
+            print("Something went wrong...", e)
+
+
+# --------------------------------------------------
+# Choice 1b - view people from SQL database world.sql
+# --------------------------------------------------
+
+def get_people_b():
+    '''
+    This function makes connection to the world.sql database and returns all the details from the 'person' table, i.e. ID, name and age. Result is printed on the screen.
+    '''
+
+    while True:  # this is a 'forever' loop, unless interupted (break)
+
+        # exeption handling
+        try:
+
+            # call function view_people() from world.py; assign the results to 'rows'
+            rows = world.view_people()
+
+            while True:
+
+                print("\nID", "\t|", "Name\t", "\t|", "Age")
+                print("-"*32)
+
+                # print out the records in chunks of two
+                for chunk in chunks(rows, 2):
+                    for row in chunk:
+                        print(row["personID"], "\t|",
+                              row["personname"], "   \t|", row["age"])
+                    x = input("Press Enter to continue or q to quit... ")
+                    if (x == "q"):  # Exit condition
+                        break
+
+                # continue even if records are no more
+                while True:
+                    x = input("Press q to quit... ")
+                    if (x == "q"):  # Exit condition
+                        break
+                break
             break
 
         # if invalid input (e.g. a letter) received
         except Exception as e:
             print("Something went wrong, try again...")
+
+
+# Code of this function was taken from https://codereview.stackexchange.com/a/227539
+def chunks(l, n):
+    """Yield successive n-sized chunks from l."""
+    for i in range(0, len(l), n):
+        yield l[i:i + n]
 
 
 # --------------------------------------------------------------------------
@@ -101,20 +170,19 @@ def get_countries_by_ind_year():
         # exeption handling
         try:
 
-            #print("Show teachers with experience less than ...")
-            # another function is used here
-            year = input("Enter year or press 0 to exit: ")
-            if (year == "0"):  # Exit condition
-                break
-            else:
-                year = int(year)
+            # get users input
+            year = input("Enter year or press q to exit: ")
 
-                # call funtion country-ind_year() from world.py; assign the results to 'rows'
+            if (year == "q"):  # Exit condition
+                break
+
+            else:
+                year = int(year)  # conver to a number
+
+                # call function country-ind_year() from world.py; assign the results to 'rows'
                 rows = world.country_ind_year(year)
 
-                # print(teachers) # prints all the records that satisfy the query
-                # for nice looking formating, records in a sequence one by one
-                print("Countries by independence year")
+                # print all the records that satisfy the query
                 print("\nCountry", " \t|", "Continent",
                       "\t|", "Independence year")
                 print("-"*52)
@@ -128,14 +196,165 @@ def get_countries_by_ind_year():
             print("Invalid number, try again...\n")
 
 
-# auxiliary function
-def get_year():
+# --------------------------------------------------------------------------
+# Choice 3 - add a new and unique-named person to SQL database world.sql
+# --------------------------------------------------------------------------
+
+def add_new_person():
     '''
-    This function is typically called from within get_countries_by_ind_year() function. It returns a string, which will be later used in formulating a SQL query.
+    # This function requests the user to enter sequentially the name of the new person - the name must be unique - and the age. The function checks if a person with such a name exists in the database already, and if so, throws an error. The new person is added to the database with automatically assignes personID attribute - incremented by 1 from the largest exiting one.
     '''
-    print("Countries by independence year")
-    print("------------------------------")
-    return input("Enter year of independence: ")
+
+    while True:  # this is a 'forever' loop, unless interupted (break)
+
+        # exeption handling
+        try:
+
+            # initialise variables and get user's input
+            print("\nAdd new person (-1 to quit)")
+            print("---------------------------")
+            new_name = input("Name: ")
+
+            if new_name == "-1":
+                break
+
+            new_age = int(input("Age: "))  # conver to a number
+            if new_age == -1:
+                break
+
+            # call function add_person() from world.py; assign the results to 'rows'
+            world.add_person(new_name, new_age)
+
+        # check if the new name already exists, then show a message
+        except pymysql.err.IntegrityError as e:  # integrity error from pymysql library
+            print("***Error,", new_name, "already exists.")
+        except pymysql.err.ProgrammingError as e:  # programming error from pymysql library
+            print("Programming Error: this table does not exist in the database.", e)
+        except Exception as e:  # any other kind of error
+            print("Invalid number, try again...\n")
+
+
+# -----------------------------------------------------------------------------
+# Choice 4 - view countries from SQL database world.sql by Name of part thereof
+# -----------------------------------------------------------------------------
+
+def view_countries_by_name():
+    '''
+    This function prompts the user to enter a country name or part of the name. Subsequently, it establishes connection to the world.sql database and returns all the countries, which names contain the entered string of characters. Result is printed on the screen.
+    '''
+
+    while True:  # this is a 'forever' loop, unless interupted (break)
+
+        # exeption handling
+        try:
+
+            # get users input
+            name_or_part_thereof = input(
+                "Enter the name or it's part (-1 to exit): ")
+
+            if (name_or_part_thereof == "-1"):  # Exit condition
+                break
+
+            else:
+                # add percent character (%) at the begining and end of the string
+                concat_name = "%" + name_or_part_thereof + "%"
+
+                # rows = world.country_by_name(name_or_part_thereof)
+                rows = world.country_by_name("%"+name_or_part_thereof+"%")
+
+                # print all the records that satisfy the query
+                print("\nCountry", " \t|", "Continent",  " \t|", "Population",
+                      "\t|", "Head of State")
+                print("-"*64)
+                for row in rows:
+                    print(row["Name"], "  \t|", row["Continent"], "  \t|",
+                          row["Population"], " \t|", row["HeadOfState"])
+
+            break
+
+        # if invalid input (e.g. a letter) received
+        except Exception as e:
+            print("Something went wrong, try again...\n")
+
+
+# -------------------------------------------------------------------
+# Choice 5 - view countries from SQL database world.sql by population
+# -------------------------------------------------------------------
+
+def view_countries_by_population():
+    '''
+    This function first asks the user to choose between less than, greater than or equal operation followed by a prompt to enter population. Subsequently, it establishes connection to the world.sql database and returns all the countries, which satisfy the condition provided by the user. Result is printed on the screen.
+    '''
+
+    while True:  # this is a 'forever' loop, unless interupted (break)
+
+        # exeption handling
+        try:
+
+            # get users input
+            print("\nCountries by population")
+            print("-----------------------")
+            selection = input("Choose between '<', '>' or '=': ")
+
+            # name_or_part_thereof = input(
+            #    "Enter the name or it's part (-1 to exit): ")
+
+            if (selection not in ("<", ">", "=")):  # Exit condition
+                break
+
+            else:
+
+                if selection == "<":
+
+                    population = int(input("Enter population: "))
+
+                    # call function country_by_pop_less_than() from world.py; assign the results to 'rows'
+                    rows = world.country_by_pop_less_than(population)
+
+                    # print all the records that satisfy the query
+                    print("\nCode", " \t|", "Name",  " \t|",
+                          "Continent",  " \t|", "Population")
+                    print("-"*64)
+                    for row in rows:
+                        print(row["Code"], "  \t|", row["Name"], "  \t|",
+                              row["Continent"], "  \t|", row["Population"])
+
+                if selection == ">":
+
+                    population = int(input("Enter population: "))
+
+                    # call function country_by_pop_greater_than() from world.py; assign the results to 'rows'
+                    rows = world.country_by_pop_greater_than(population)
+
+                    # print all the records that satisfy the query
+                    print("\nCode", " \t|", "Name",  " \t|",
+                          "Continent",  " \t|", "Population")
+                    print("-"*64)
+                    for row in rows:
+                        print(row["Code"], "  \t|", row["Name"], "  \t|",
+                              row["Continent"], "  \t|", row["Population"])
+
+                if selection == "=":
+
+                    population = int(input("Enter population: "))
+
+                    # call function country_by_pop_equal() from world.py; assign the results to 'rows'
+                    rows = world.country_by_pop_equal(population)
+
+                    # print all the records that satisfy the query
+                    print("\nCode", " \t|", "Name",  " \t|",
+                          "Continent",  " \t|", "Population")
+                    print("-"*64)
+                    for row in rows:
+                        print(row["Code"], "  \t|", row["Name"], "  \t|",
+                              row["Continent"], "  \t|", row["Population"])
+
+            break
+
+        # if invalid input (e.g. a letter) received
+        except Exception as e:
+            print("Something went wrong, try again...\n")
+
 
 # ------------
 # Display menu
@@ -143,17 +362,19 @@ def get_year():
 
 
 def display_menu():
+
     print("")
     print("MENU")
     print("=" * 4)
-    print("1 - View people")
-    print("2 - View countries by independence year")
-    print("3 - Add new person ")
-    print("4 - View countries by name")
-    print("5 - View countries by population")
-    print("6 - Find students by address")
-    print("7 - Add new course")
-    print("x - Exit application")
+    print("1 - View people (world.sql)")
+    print("b - View people - different approach, but imperfect (world.sql)")
+    print("2 - View countries by independence year (world.sql)")
+    print("3 - Add new person (world.sql)")
+    print("4 - View countries by name (world.sql)")
+    print("5 - View countries by population (world.sql)")
+    print("6 - Find students by address (mongo.json)")
+    print("7 - Add new course (mongo.json)")
+    print("\nx - Exit application\n")
 
 
 # ------------------
