@@ -26,8 +26,8 @@ conn = None
 def connect():
     global conn  # variable is global, so that it exists outside of the function
     conn = pymysql.connect(host="localhost",
-                           user="ak-gmit",
-                           password="Wro",  # enter the password here !!!
+                           user="",  # enter your user name here !!!
+                           password="",  # enter the password here !!!
                            db="world",
                            cursorclass=pymysql.cursors.DictCursor)
 
