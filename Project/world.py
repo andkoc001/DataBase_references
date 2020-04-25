@@ -38,24 +38,23 @@ def connect():
 
 # show all the people
 
-
 def view_people():
 
     # check if there is connection already, i.e. conn != None,
     # then make a connection, using function connect()
     if (not conn):
-        print("Initialising connection to database...")
+        #print("Initialising connection to database...")
         connect()
-        print("Connected")
+        # print("Connected")
 
     # otherwise state that the connection already exists
     else:
-        print("Already connected to database")
+        #print("Already connected to database")
+        pass
 
-    # ------------------------------------------------
+    # --- SQL query ---
     # specify the SQL query assigned to 'my_query_sql'
     my_query_sql = "SELECT * FROM person"
-    # ------------------------------------------------
 
     # connect to the SQL database and perform the query; return the found records
     with conn:
@@ -82,13 +81,13 @@ def view_people():
     # return the result to the calling funtion in project_main.py
 
 
-# --------------------------------------------------------
+# ---------------------------------------------------------
 # User choice #1b - define functions that perform SQL query
-# --------------------------------------------------------
+# ---------------------------------------------------------
 
 # show all the people - an alternative approache, but with bugs
 
-def view_people_b():
+def view_people_1b():
 
     # check if there is connection already, i.e. conn != None,
     # then make a connection, using function connect()
@@ -101,10 +100,9 @@ def view_people_b():
     else:
         print("Already connected to database")
 
-    # ------------------------------------------------
+    # --- SQL query ---
     # specify the SQL query assigned to 'my_query_sql'
     my_query_sql = "SELECT * FROM person"
-    # ------------------------------------------------
 
     # connect to the SQL database and perform the query; return the found records
     with conn:
@@ -141,10 +139,9 @@ def country_ind_year(year):
     else:
         print("Already connected to database")
 
-    # ------------------------------------------------
+    # --- SQL query ---
     # specify the SQL query assigned to 'my_query_sql'
     my_query_sql = "SELECT Name, Continent, IndepYear FROM country WHERE IndepYear = %s"
-    # ------------------------------------------------
 
     # connect to the SQL database and perform the query; return the found records
     with conn:
@@ -179,12 +176,12 @@ def add_person(n_name, n_age):
 
     # otherwise state that the connection already exists
     else:
-        print("Already connected to database")
+        #print("Already connected to database")
+        pass
 
-    # ------------------------------------------------
+    # --- SQL query ---
     # specify the SQL query assigned to 'my_query_sql'
     my_query_sql = "INSERT INTO person (personname, age) VALUES (%s, %s)"
-    # ------------------------------------------------
 
     # connect to the SQL database and perform the query; return the found records
     with conn:
@@ -196,44 +193,68 @@ def add_person(n_name, n_age):
         cursor.execute(my_query_sql, (n_name, n_age))
 
 
+# -----------------------------------------------------------
+# For user choice #4 and #5 - load the database to the memory
+# -----------------------------------------------------------
+
+# initial assumption that the variable 'entire_db' is empty
+entire_db = None
+
+
+def get_database():
+    '''
+    This function gives attribute 'global' to the variable 'entire_db'. Then, it will check whether the variable is populated with data and if not, it will make connection to the SQL database and fetch all its content. The content will be then assigned to 'entire_db' variable (which is global and accessible outside of the function).
+    '''
+    global entire_db  # global attribute makes the variable accessible outside the function
+
+    if (not entire_db):
+            # check if there is connection already, i.e. conn != None,
+            # then make a connection, using function connect()
+        if (not conn):
+            print("Initialising connection to database...")
+            connect()
+            with conn:
+
+                # create the cursor
+                cursor = conn.cursor()
+
+                # execute the cursor
+                cursor.execute("SELECT * FROM country")
+
+                # assign the results to a variable
+                entire_db = cursor.fetchall()
+
+                # return the result to the variable
+                return entire_db
+    else:
+        pass
+
 # --------------------------------------------------------
 # User choice #4 - define functions that perform SQL query
 # --------------------------------------------------------
 
 # show countries by name
 # as argument is passed a country name or part thereof
+
+
 def country_by_name(name_part):
+    get_database()
 
-    # check if there is connection already, i.e. conn != None,
-    # then make a connection, using function connect()
-    if (not conn):
-        print("Initialising connection to database...")
-        connect()
-        print("Connected")
-
-    # otherwise state that the connection already exists
-    else:
-        print("Already connected to database")
-
-    # ------------------------------------------------
+    # --- SQL query ---
     # specify the SQL query assigned to 'my_query_sql'
     my_query_sql = "SELECT Name, Continent, Population, HeadOfState FROM country WHERE Name LIKE %s"
-    # ------------------------------------------------
 
-    # connect to the SQL database and perform the query; return the found records
-    with conn:
+    # create the cursor
+    cursor = conn.cursor()
 
-        # create the cursor
-        cursor = conn.cursor()
+    # execute the cursor
+    cursor.execute(my_query_sql, (name_part))
 
-        # execute the cursor
-        cursor.execute(my_query_sql, (name_part))
+    # assign the results to a variable
+    r4 = cursor.fetchall()
 
-        # assign the results to a variable
-        r4 = cursor.fetchall()
-
-        # return the result to the calling funtion in project_main.py
-        return r4
+    # return the result to the calling funtion in project_main.py
+    return r4
 
 
 # --------------------------------------------------------
@@ -244,105 +265,66 @@ def country_by_name(name_part):
 # as argument is population of a country
 def country_by_pop_less_than(pop):
 
-    # check if there is connection already, i.e. conn != None,
-    # then make a connection, using function connect()
-    if (not conn):
-        print("Initialising connection to database...")
-        connect()
-        print("Connected")
+    get_database()
 
-    # otherwise state that the connection already exists
-    else:
-        print("Already connected to database")
-
-    # ------------------------------------------------
+    # --- SQL query ---
     # specify the SQL query assigned to 'my_query_sql'
     my_query_sql = "SELECT Code, Name, Continent, Population FROM country WHERE Population < %s"
-    # ------------------------------------------------
 
-    # connect to the SQL database and perform the query; return the found records
-    with conn:
+    # create the cursor
+    cursor = conn.cursor()
 
-        # create the cursor
-        cursor = conn.cursor()
+    # execute the cursor
+    cursor.execute(my_query_sql, (pop))
 
-        # execute the cursor
-        cursor.execute(my_query_sql, (pop))
+    # assign the results to a variable
+    r51 = cursor.fetchall()
 
-        # assign the results to a variable
-        r51 = cursor.fetchall()
-
-        # return the result to the calling funtion in project_main.py
-        return r51
+    # return the result to the calling funtion in project_main.py
+    return r51
 
 
 # show countries that population is greater than specified in the argument
 # as argument is population of a country
 def country_by_pop_greater_than(pop):
 
-    # check if there is connection already, i.e. conn != None,
-    # then make a connection, using function connect()
-    if (not conn):
-        print("Initialising connection to database...")
-        connect()
-        print("Connected")
+    get_database()
 
-    # otherwise state that the connection already exists
-    else:
-        print("Already connected to database")
-
-    # ------------------------------------------------
+    # --- SQL query ---
     # specify the SQL query assigned to 'my_query_sql'
     my_query_sql = "SELECT Code, Name, Continent, Population FROM country WHERE Population > %s"
-    # ------------------------------------------------
 
-    # connect to the SQL database and perform the query; return the found records
-    with conn:
+    # create the cursor
+    cursor = conn.cursor()
 
-        # create the cursor
-        cursor = conn.cursor()
+    # execute the cursor
+    cursor.execute(my_query_sql, (pop))
 
-        # execute the cursor
-        cursor.execute(my_query_sql, (pop))
+    # assign the results to a variable
+    r52 = cursor.fetchall()
 
-        # assign the results to a variable
-        r52 = cursor.fetchall()
-
-        # return the result to the calling funtion in project_main.py
-        return r52
+    # return the result to the calling funtion in project_main.py
+    return r52
 
 
 # show countries that population is equal to specified in the argument
 # as argument is population of a country
 def country_by_pop_equal(pop):
 
-    # check if there is connection already, i.e. conn != None,
-    # then make a connection, using function connect()
-    if (not conn):
-        print("Initialising connection to database...")
-        connect()
-        print("Connected")
+    get_database()
 
-    # otherwise state that the connection already exists
-    else:
-        print("Already connected to database")
-
-    # ------------------------------------------------
+    # --- SQL query ---
     # specify the SQL query assigned to 'my_query_sql'
     my_query_sql = "SELECT Code, Name, Continent, Population FROM country WHERE Population = %s"
-    # ------------------------------------------------
 
-    # connect to the SQL database and perform the query; return the found records
-    with conn:
+    # create the cursor
+    cursor = conn.cursor()
 
-        # create the cursor
-        cursor = conn.cursor()
+    # execute the cursor
+    cursor.execute(my_query_sql, (pop))
 
-        # execute the cursor
-        cursor.execute(my_query_sql, (pop))
+    # assign the results to a variable
+    r53 = cursor.fetchall()
 
-        # assign the results to a variable
-        r53 = cursor.fetchall()
-
-        # return the result to the calling funtion in project_main.py
-        return r53
+    # return the result to the calling funtion in project_main.py
+    return r53
